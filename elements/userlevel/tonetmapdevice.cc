@@ -256,7 +256,7 @@ ToNetmapDevice::push(int, Packet* p) {
 		}
 	}
 
-	if (s.q_size >= _burst) { //TODO "or if timeout", not implemented yet because batching +- solves this problem
+	/*if (s.q_size >= _burst)*/ { //TODO "or if timeout", not implemented yet because batching +- solves this problem
 do_send:
 		Packet* last = s.q->prev();
 
@@ -275,7 +275,7 @@ do_send:
 		}
 
 		//Lock is acquired
-		unsigned int sent = send_packets(s.q,false,false);
+		unsigned int sent = send_packets(s.q,true,true);
 
 		if (sent > 0 && s.q)
 			s.q->set_prev(last);
@@ -421,7 +421,7 @@ inline unsigned int ToNetmapDevice::send_packets(Packet* &head, bool ask_sync, b
 		u_int space = nm_ring_space(txring);
 		while ((space >= next_slots) && next) {
 			p = next;
-			next_slots = ((next->length() - 1) / nmd->some_ring->nr_buf_size) + 1;
+			next_slots = ((next->length() - 1) / txring->nr_buf_size) + 1;
 			next = static_cast<WritablePacket*>(p->next());
 
 			slot = &txring->slot[cur];

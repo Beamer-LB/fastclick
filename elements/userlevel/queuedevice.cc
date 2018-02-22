@@ -146,6 +146,10 @@ int TXQueueDevice::initialize_tx(ErrorHandler * errh) {
         return errh->error("No threads end up in this queuedevice...? Aborting.");
     }
 
+    if (n_threads > _maxqueues) {
+        queue_share = n_threads / _maxqueues;
+    }
+
     if (n_threads >= _maxqueues)
         n_queues = _maxqueues;
     else
@@ -314,6 +318,11 @@ int QueueDevice::initialize_tasks(bool schedule, ErrorHandler *errh) {
 	for (int th_id = 0; th_id < master()->nthreads(); th_id++) {
 		if (!usable_threads[th_id])
 			continue;
+		if (qu_num == firstqueue + n_queues)
+		{
+			usable_threads[th_id] = false;
+			continue;
+		}
 
 		if (th_share_idx % thread_share != 0) {
 			--th_num;
@@ -331,6 +340,7 @@ int QueueDevice::initialize_tasks(bool schedule, ErrorHandler *errh) {
 		_thread_to_firstqueue[th_id] = qu_num;
 
 		for (int j = 0; j < queue_per_threads; j++) {
+			if (qu_num == firstqueue + n_queues) break;
 			if (_verbose > 2)
 				click_chatter("%s : Queue %d handled by th %d",name().c_str(),qu_num,th_id);
 			_queue_to_thread[qu_num] = th_id;
